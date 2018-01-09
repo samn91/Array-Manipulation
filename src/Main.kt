@@ -4,6 +4,11 @@
 
 import java.io.*
 import java.util.*
+import kotlin.system.measureNanoTime
+
+data class Ops(
+        val start: Int, val end: Int, val amount: Long)
+
 
 fun main(args: Array<String>) {
     val sc = Scanner(System.`in`)
@@ -11,43 +16,46 @@ fun main(args: Array<String>) {
     val opSize = sc.nextInt()
 
     val res = LongArray(arraySize)
-    val ranges = mutableListOf<Pair<IntRange, Long>>()
+    val input = Array(arraySize, { Ops(0, 0, 0) })
 
-    (1..opSize).forEach {
+    for (it in 1..opSize) {
         val from = sc.nextInt() - 1
         val to = sc.nextInt() - 1
         val rawAmount = sc.nextLong()
-        ranges.add(Pair((from..to), rawAmount))
+
+        input[it - 1] = Ops(from, to, rawAmount)
     }
 
-    (1..opSize).forEach {
-        val from = sc.nextInt() - 1
-        val to = sc.nextInt() - 1
-        val rawAmount = sc.nextLong()
+    val currentTimeMillis = System.currentTimeMillis()
+//    input.sortBy { it.start }
 
-        var included = false
-        ranges.forEach {
-            var (range, amont) =it
-            if (from in range && to in range) {
-                //included
-                (range.start..from)
-                (to..range.last)
-                (from..range.last)
+    val sortedInput = input.sortedWith(compareBy({ it.start }, { it.end }))
 
-            } else if (from in range || to in range) {
-                included = true
-                if (from in range) {
-                    //included
-                } else {//to in range
-
-                }
+    var max = 0L
+    var holder: Ops? = null
+    for (i in 1 until sortedInput.size) {
+        val ops = sortedInput[i]
+        val prev = sortedInput[i - 1]
+        holder?.let {
+            if (it.start < ops.start) {
+                holder = null
+            } else {
+                max = maxOf(it.amount, ops.amount, max)
             }
         }
-        if (!included) {
-            ranges.add(Pair((from..to), rawAmount))
-        }
-    }
 
-    println(res.max())
+        if (prev.end < ops.start) {
+            max = maxOf(prev.amount, ops.amount, max)
+        } else {
+            holder = Ops(ops.start, prev.end, ops.amount + prev.amount)
+            max = maxOf(holder!!.amount, max)
+        }
+
+
+    }
+    println(System.currentTimeMillis() - currentTimeMillis)
+
+
 
 }
+
